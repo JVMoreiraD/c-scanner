@@ -32,6 +32,6 @@ func IsFloat(str string) bool {
 	return match
 }
 func IsReserved(str string) bool {
-	match, _ := regexp.MatchString(`\b(for|while|return|int|float|if|else)\b`, str)
+	match, _ := regexp.MatchString(`\b(for|while|do|return|int|float|if|else)\b`, str)
 	return match
 }

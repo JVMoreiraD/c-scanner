@@ -1,7 +1,13 @@
 package main
 
-import "github.com/JVMoreiraD/c-scanner/cmd/scanner"
+import (
+	"os"
+
+	"github.com/JVMoreiraD/c-scanner/cmd/scanner"
+)
 
 func main() {
-	scanner.Scanner()
+	filePath := os.Args[1]
+
+	scanner.Scanner(filePath)
 }

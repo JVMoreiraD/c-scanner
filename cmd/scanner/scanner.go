@@ -5,31 +5,33 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/JVMoreiraD/c-scanner/cmd/tokens"
 )
 
-func Scanner() {
-	fmt.Println("Insira as instruções (Digite 'fim' para encerrar):")
+func Scanner(filePath string) {
+	readFile, err := os.Open(filePath)
+	defer readFile.Close()
 
-	reader := bufio.NewReader(os.Stdin)
+	if err != nil {
+		fmt.Println(err)
+	}
 	var word []string
+	fileScanner := bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanWords)
 
-	for {
-		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input)
-		if input == "fim" {
-			break
-		}
-		// Regex pattern to match operators and separators
-		tokenRegex := regexp.MustCompile(`!=|==|>=|<=|[(){;}]|[^\s(){};]+`)
+	for fileScanner.Scan() {
+		wr := fileScanner.Text()
+		tokenRegex := regexp.MustCompile(`(\+\+|--)|!=|==|>=|<=|[(){;}\\=]+|\b\w+\b`)
+		// fmt.Println(wr)
+		tokensText := tokenRegex.FindAllString(wr, -1)
+		fmt.Println(tokensText)
 
-		// Find all tokens in the input
-		tokensText := tokenRegex.FindAllString(input, -1)
+		// test := tokens.TokenMaker(wr)
+		// fmt.Println(test)
 		for _, tok := range tokensText {
 			if tok != "" {
-				if tokens.IsComparable(tok) || tokens.IsLogical(tok) || tokens.IsNoDerivable(tok) || tokens.IsOperator(tok) || tokens.IsReserved(tok) {
+				if tokens.IsComparable(tok) || tokens.IsLogical(tok) || tokens.IsNoDerivable(tok) || tokens.IsOperator(tok) || tokens.IsReserved(tok) || tokens.IsIncrementOrDecrement(tok) {
 					word = append(word, "<"+tok+">")
 				} else if tokens.IsFloat(tok) {
 					word = append(word, "<"+tok+", float>")

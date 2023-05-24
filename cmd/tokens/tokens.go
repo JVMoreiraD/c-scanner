@@ -4,82 +4,116 @@ import (
 	"regexp"
 )
 
-func IsId(str string) bool {
+func isId(str string) bool {
 	match, _ := regexp.MatchString(`a-zA-Z`, str)
 
 	return match
 }
-func IsOperator(str string) bool {
+func isOperator(str string) bool {
 	match, _ := regexp.MatchString(`[+\-*/]`, str)
 	return match
 }
-func IsNoDerivable(str string) bool {
-	match, _ := regexp.MatchString(`[\(\)\{\};]`, str)
+func isNoDerivable(str string) bool {
+	match, _ := regexp.MatchString(`[\(\)\;\}\{]`, str)
 	return match
 }
-func IsComparable(str string) bool {
+func isComparable(str string) bool {
 	match, _ := regexp.MatchString(`<=|>=|==|!=|=`, str)
 	return match
 }
-func IsLogical(str string) bool {
+func isLogical(str string) bool {
 	match, _ := regexp.MatchString(`&|\|`, str)
 	return match
 }
 
-func IsInteger(str string) bool {
+func isInteger(str string) bool {
 	match, _ := regexp.MatchString(`\b\d+\b`, str)
 	return match
 }
-func IsFloat(str string) bool {
+func isFloat(str string) bool {
 	match, _ := regexp.MatchString(`\b\d+\.\d+\b`, str)
 	return match
 }
-func IsReserved(str string) bool {
+func isReserved(str string) bool {
 	match, _ := regexp.MatchString(`\b(for|while|do|return|int|float|if|else)\b`, str)
 	return match
 }
 
-func IsIncrementOrDecrement(str string) bool {
+func isIncrementOrDecrement(str string) bool {
 	match, _ := regexp.MatchString(`--|\+\+`, str)
 	return match
 }
-func IsWhiteSpace(str string) bool {
-	match, _ := regexp.MatchString(`\s`, str)
+func isWhiteSpace(str string) bool {
+	for _, char := range str {
+		if char != ' ' && char != '\t' && char != '\n' && char != '\r' {
+			return false
+		}
+	}
+	return true
+}
+func isLineBreaker(str string) bool {
+	match, _ := regexp.MatchString(`\n`, str)
+	return match
+}
+
+func isBra(str string) bool {
+	match, _ := regexp.MatchString(`\n`, str)
 	return match
 }
 
 func TokenMaker(str string) []string {
 	var tokens []string
-	currentToken := ""
-	if IsIncrementOrDecrement(str) {
-		tokens = append(tokens, str)
-	}
-	for i := 0; i < len(str); i++ {
-		if IsNoDerivable(string(str[i])) {
-			if currentToken != "" {
-				tokens = append(tokens, currentToken)
-				currentToken = ""
+	var stack string
+	for _, char := range str {
+		switch {
+		case isWhiteSpace(string(char)):
+			if stack != "" {
+				tokens = append(tokens, stack)
+				stack = ""
 			}
-			tokens = append(tokens, string(str[i]))
-		} else if IsOperator(string(str[i])) {
-			if currentToken != "" {
-				tokens = append(tokens, currentToken)
-				currentToken = ""
+
+		case isNoDerivable(string(char)):
+			if stack != "" {
+				tokens = append(tokens, stack)
+				stack = ""
 			}
-			tokens = append(tokens, string(str[i]))
-		} else if IsWhiteSpace(string(str[i])) {
-			if currentToken != "" {
-				tokens = append(tokens, currentToken)
-				currentToken = ""
+			tokens = append(tokens, string(char))
+		case isOperator(string(char)):
+			if stack == string(char) {
+				tokens = append(tokens, stack+string(char))
+				stack = ""
+			} else {
+				if stack != "" {
+					tokens = append(tokens, stack)
+				}
+				stack = string(char)
 			}
-		} else {
-			currentToken += string(string(str[i]))
+
+		default:
+			stack += string(char)
 		}
-		if currentToken != "" {
-			tokens = append(tokens, currentToken)
-		}
+
 	}
 	return tokens
+}
+
+func TokenFormatter(tokens []string) []string {
+	var word []string
+	for _, tok := range tokens {
+		if tok != "" {
+			if isComparable(tok) || isLogical(tok) || isNoDerivable(tok) || isOperator(tok) || isReserved(tok) || isIncrementOrDecrement(tok) {
+				word = append(word, "<"+tok+">")
+			} else if isFloat(tok) {
+				word = append(word, "<"+tok+", float>")
+			} else if isInteger(tok) {
+				word = append(word, "<"+tok+", int>")
+			} else {
+				word = append(word, "<"+tok+", id>")
+			}
+		}
+	}
+
+	return word
 }
 
 // improvement

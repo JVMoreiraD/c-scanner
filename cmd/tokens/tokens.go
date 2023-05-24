@@ -51,15 +51,6 @@ func isWhiteSpace(str string) bool {
 	}
 	return true
 }
-func isLineBreaker(str string) bool {
-	match, _ := regexp.MatchString(`\n`, str)
-	return match
-}
-
-func isBra(str string) bool {
-	match, _ := regexp.MatchString(`\n`, str)
-	return match
-}
 
 func TokenMaker(str string) []string {
 	var tokens []string

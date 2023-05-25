@@ -22,8 +22,7 @@ func Scanner(filePath string) {
 		line := fileScanner.Text()
 		words := tokens.TokenMaker(line)
 		// fmt.Println(words)
-		result = append(result, tokens.TokenFormatter(words)...)
-
+		result = append(result, words...)
 	}
 	result = append(result, "<eof>")
 	fmt.Printf("%v\n", result)

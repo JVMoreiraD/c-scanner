@@ -1,7 +1,6 @@
 package tokens
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -93,8 +92,15 @@ func isFloat(str string) bool {
 }
 
 func isReserved(str string) bool {
-	match, _ := regexp.MatchString(`\b(for|while|do|return|int|float|if|else)\b`, str)
-	return match
+	operators := []string{"for", "while", "do", "return", "int", "float", "if", "else"}
+
+	for _, op := range operators {
+		if str == op {
+			return true
+		}
+	}
+
+	return false
 }
 
 func TokenMaker(str string) []string {
@@ -102,21 +108,10 @@ func TokenMaker(str string) []string {
 	var stack string
 	for _, char := range str {
 		switch {
-		case isReserved(string(char)):
-			if stack != "" {
-				if !isReserved(stack) {
-					tokens = append(tokens, stack)
-					stack = string(char)
-				} else {
-					stack += string(char)
-				}
-			} else {
-				stack = string(char)
-			}
 		case isLogical(string(char)):
 			if stack != "" {
 				if !isReserved(stack) {
-					tokens = append(tokens, stack)
+					tokens = append(tokens, tokenParser(stack))
 					stack = string(char)
 				} else {
 					stack += string(char)
@@ -126,7 +121,7 @@ func TokenMaker(str string) []string {
 			}
 		case isWhiteSpace(string(char)):
 			if stack != "" {
-				tokens = append(tokens, stack)
+				tokens = append(tokens, tokenParser(stack))
 				stack = ""
 			}
 		case string(char) == ".":
@@ -134,19 +129,18 @@ func TokenMaker(str string) []string {
 				if isInteger(stack) {
 					stack += string(char)
 				} else {
-					tokens = append(tokens, stack)
+					tokens = append(tokens, tokenParser(stack))
 					stack = ""
 				}
 			} else {
 				stack += string(char)
 			}
-
 		case isInteger(string(char)):
 			if stack != "" {
 				if isFloat(stack + string(char)) {
 					stack += string(char)
 				} else if !isInteger(stack) {
-					tokens = append(tokens, stack)
+					tokens = append(tokens, tokenParser(stack))
 					stack = string(char)
 				} else {
 					stack += string(char)
@@ -157,25 +151,25 @@ func TokenMaker(str string) []string {
 
 		case isNoDerivable(string(char)):
 			if stack != "" {
-				tokens = append(tokens, stack)
+				tokens = append(tokens, tokenParser(stack))
 				stack = ""
 			}
-			tokens = append(tokens, string(char))
+			tokens = append(tokens, tokenParser(string(char)))
 
 		case isOperator(string(char)):
 			if stack == string(char) {
-				tokens = append(tokens, stack+string(char))
+				tokens = append(tokens, tokenParser(stack+string(char)))
 				stack = ""
 			} else {
 				if stack != "" {
-					tokens = append(tokens, stack)
+					tokens = append(tokens, tokenParser(stack))
 				}
 				stack = string(char)
 			}
 		case isComparable(string(char)):
 			if stack != "" {
 				if !isComparable(stack) {
-					tokens = append(tokens, stack)
+					tokens = append(tokens, tokenParser(stack))
 					stack = string(char)
 				} else {
 					stack += string(char)
@@ -187,7 +181,7 @@ func TokenMaker(str string) []string {
 		case isValid(string(char)):
 			if stack != "" {
 				if !isValid(stack) {
-					tokens = append(tokens, stack)
+					tokens = append(tokens, tokenParser(stack))
 					stack = string(char)
 				} else {
 					stack += string(char)
@@ -200,25 +194,25 @@ func TokenMaker(str string) []string {
 		}
 
 	}
-	tokens = append(tokens, stack)
+	if stack != "" {
+		tokens = append(tokens, tokenParser(stack))
+
+	}
 	return tokens
 }
 
-func TokenFormatter(tokens []string) []string {
-	var word []string
-	for _, tok := range tokens {
-		if tok != "" {
-			if isComparable(tok) || isLogical(tok) || isNoDerivable(tok) || isOperator(tok) || isReserved(tok) {
-				word = append(word, "<"+tok+">")
-			} else if isFloat(tok) {
-				word = append(word, "<"+tok+", float>")
-			} else if isInteger(tok) {
-				word = append(word, "<"+tok+", int>")
-			} else {
-				word = append(word, "<"+tok+", id>")
-			}
-		}
+func tokenParser(str string) string {
+	switch {
+	case isValid(str) && !isReserved(str):
+		str = "<" + str + ", id>"
+	case isFloat(str):
+		str = "<" + str + ", float>"
+	case isInteger(str):
+		str = "<" + str + ", int>"
+	default:
+		str = "<" + str + ">"
+
 	}
 
-	return word
+	return str
 }

@@ -7,7 +7,10 @@ import (
 
 func isValid(str string) bool {
 
-	for _, char := range str {
+	for i, char := range str {
+		if i == 0 && !strings.ContainsAny(string(char), "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+			return false
+		}
 		if strings.ContainsAny(string(char), "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") {
 			return true
 		}
@@ -140,8 +143,10 @@ func TokenMaker(str string) []string {
 				if isFloat(stack + string(char)) {
 					stack += string(char)
 				} else if !isInteger(stack) {
-					tokens = append(tokens, tokenParser(stack))
-					stack = string(char)
+					// tokens = append(tokens, tokenParser(stack))
+					// stack = string(char)
+					stack += string(char)
+
 				} else {
 					stack += string(char)
 				}
